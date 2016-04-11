@@ -1,5 +1,8 @@
 var lunr = require('lunr');
 var fs = require('fs');
+var util = require('util');
+var htmlToText = require('html-to-text');
+var cheerio = require('cheerio');
 
 module.exports = {
   /*
@@ -128,9 +131,62 @@ module.exports = {
           value = value.join(' ');
         }
         itemToIndex[name] = value;
-      } else {
+      } else{
         itemToIndex[name] = '';
       }
+        
+      // If it's the content attribute, load it's content from the contentRendered attribute instead
+      if(name == 'content' && model.attributes.contentRendered != null){
+          
+          // Load the HTML content into Cheerio to deal with it easily in jQuery syntax
+          $ = cheerio.load(model.attributes.contentRendered);
+          
+          // Remove the common parts of the pages, keep only the unique content
+          $("head, .wrapper-top-nav, .wrapper-footer, .wrapper-legal, #cookie-prompt, .wrapper-quiet-evolution-form, script, .social-share, .pressrelease-contact").remove();
+          $("*").removeAttr("href, src, class, id");
+          
+          // Remove all HTML and Javascript tags, keep text only
+          var clean = htmlToText.fromString($.html(), {});
+          
+          // Add the cleaned HTML to items to be indexed
+          itemToIndex[name] = clean;
+          
+      }
+        
+        // If it's the title attribute, load it's content from the cotranslation files
+      if(name == 'title' && model.attributes[name] !== null){
+          
+          // Load the translation file
+          var translation = this.config.translation_files;
+
+          // Get the language attribute
+          var langFile = model.attributes.lang;
+          
+          // If there's a translation for this language then load it's file, otherwise load the English translation file
+          if (translation[langFile] !== undefined){
+              langFile = translation[langFile];
+          } else {
+              langFile = translation.en;
+          }
+          
+          // Load the translation file content
+          var contents = fs.readFileSync(langFile);
+          
+          // Parse the json file content
+          var translationContent = JSON.parse(contents);
+          
+          // Get the translated title from the loaded file
+          var translatedTitle = translationContent[model.attributes[name]];
+          
+          // Set the translation if exist
+          if (translatedTitle != undefined){
+              itemToIndex[name] = translationContent[model.attributes[name]];
+          }
+          
+      }
+        
+        
+        
     }
     // set the unique identifier
     itemToIndex.cid = model.cid;
@@ -144,6 +200,54 @@ module.exports = {
       if (typeof model.attributes[name] !== 'undefined' &&
           model.attributes[name] !== null) {
         itemForContent[name] = model.attributes[name];
+      }
+        
+      //console.log(util.inspect(name, false, null));
+
+      if(name == 'content' && model.attributes.contentRendered != null){
+          
+          // Load the HTML content into Cheerio to deal with it easily in jQuery syntax
+          $ = cheerio.load(model.attributes.contentRendered);
+          
+          $("head, .wrapper-top-nav, .wrapper-footer, .wrapper-legal, #cookie-prompt, .wrapper-quiet-evolution-form, script, .social-share, .pressrelease-contact").remove();
+          $("*").removeAttr("href, src, class, id");
+          
+          // Remove all HTML and Javascript tags, keep text only
+          var clean = htmlToText.fromString($.html(), {});
+          
+          itemForContent[name] = clean;
+      }
+        
+      // If it's the title attribute, load it's content from the cotranslation files
+      if(name == 'title' && model.attributes[name] !== null){
+          
+          // Load the translation file
+          var translation = this.config.translation_files;
+
+          // Get the language attribute
+          var langFile = model.attributes.lang;
+          
+          // If there's a translation for this language then load it's file, otherwise load the English translation file
+          if (translation[langFile] !== undefined){
+              langFile = translation[langFile];
+          } else {
+              langFile = translation.en;
+          }
+          
+          // Load the translation file content
+          var contents = fs.readFileSync(langFile);
+          
+          // Parse the json file content
+          var translationContent = JSON.parse(contents);
+          
+          // Get the translated title from the loaded file
+          var translatedTitle = translationContent[model.attributes[name]];
+          
+          // Set the translation if exist
+          if (translatedTitle != undefined){
+              itemForContent[name] = translationContent[model.attributes[name]];
+          }
+          
       }
     }
     // save it, keyed to its cid, for easy retrieval
@@ -204,7 +308,7 @@ module.exports = {
     // next copy the client files
     var clientFiles = {
       'lunr-ui.min.js': __dirname + '/',
-      'lunr.min.js': __dirname + '/../node_modules/lunr/'
+      'lunr.min.js': '/Users/bakrkawkji/www/home/sites/trustly/docpad-trustly.com/node_modules/lunr/'
     };
     var destDir = location + '/';
     for (var filename in clientFiles) {
