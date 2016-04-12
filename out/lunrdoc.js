@@ -119,6 +119,23 @@ module.exports = {
    * This indexes one item and gathers its content
    */
   index: function(index, model) {
+    
+    // Skip the page from being indexed if it has the sitmap attribute set to false
+    if (model.attributes['sitemap'] == false) {
+        console.log('Skipping the following URL, reason: sitemap>false ');
+        console.log(model.attributes['url']);
+        return;
+    }
+    
+    // Skip the page if it's one of the stopUrls that's defined in docpad.coffe
+    for (var i in this.config.indexes[index].stopUrls) {
+        if(this.config.indexes[index].stopUrls[i].url == model.attributes['url']){
+            console.log('Skipping the following stopUrl, reason: defined as stopUrl in docpad.coffe ');
+            console.log(model.attributes['url']);
+            return;
+        }
+    }
+    
     var itemToIndex = {};
     // index all available fields for the item
     for (var i in this.config.indexes[index].indexFields) {
