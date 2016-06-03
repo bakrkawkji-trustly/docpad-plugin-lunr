@@ -305,7 +305,7 @@ module.exports = {
         this.config.indexes[index].resultsTemplate.indexOf('.eco') != -1) {
         // otherwise if a string was passed that is a path to a .eco file,
         // assume it is a path to an eco template
-        var ecoCompiler = require('../node_modules/eco/lib/compiler');
+        var ecoCompiler = require('/Users/bakrkawkji/www/home/sites/trustly/docpad-trustly.com/node_modules/eco/lib/compiler');
         var templatePath = this.config.rootPath + '/' + this.config.indexes[index].resultsTemplate;
         var templateFile = fs.readFileSync(templatePath, { encoding: 'utf8' });
         var templateFunc = ecoCompiler.compile(templateFile);
