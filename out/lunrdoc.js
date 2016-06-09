@@ -305,17 +305,12 @@ module.exports = {
         this.config.indexes[index].resultsTemplate.indexOf('.eco') != -1) {
         // otherwise if a string was passed that is a path to a .eco file,
         // assume it is a path to an eco template
-        try {
-            var dirpath = __dirname;        
-            
-            var dirRegex = /(.*\/node\_modules\/).*$/;
-            var node_modules_dir = dirRegex.exec(dirpath)[1];
-            console.log("Max path is:" + node_modules_dir);
-            
-        } catch(e) {
-            //
-        }
-          
+        
+        // resolve the correct absolute path to the eco module
+        var dirpath = __dirname;        
+        var dirRegex = /(.*\/node\_modules\/).*$/;
+        var node_modules_dir = dirRegex.exec(dirpath)[1];
+
         var ecoCompiler = require( node_modules_dir  + '/eco/lib/compiler');
         var templatePath = this.config.rootPath + '/' + this.config.indexes[index].resultsTemplate;
         var templateFile = fs.readFileSync(templatePath, { encoding: 'utf8' });
