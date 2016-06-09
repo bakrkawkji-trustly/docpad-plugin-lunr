@@ -129,7 +129,7 @@ module.exports = {
     
     // Skip the page if it's one of the stopUrls that's defined in docpad.coffe
     for (var i in this.config.indexes[index].stopUrls) {
-        if(this.config.indexes[index].stopUrls[i].url == model.attributes['url']){
+        if(this.config.indexes[index].stopUrls[i] == model.attributes['url']){
             console.log('Skipping the following stopUrl, reason: defined as stopUrl in docpad.coffe ');
             console.log(model.attributes['url']);
             return;
@@ -305,11 +305,23 @@ module.exports = {
         this.config.indexes[index].resultsTemplate.indexOf('.eco') != -1) {
         // otherwise if a string was passed that is a path to a .eco file,
         // assume it is a path to an eco template
-        var ecoCompiler = require('/Users/bakrkawkji/www/home/sites/trustly/docpad-trustly.com/node_modules/eco/lib/compiler');
+        try {
+            var dirpath = __dirname;        
+            
+            var dirRegex = /(.*\/node\_modules\/).*$/;
+            var node_modules_dir = dirRegex.exec(dirpath)[1];
+            console.log("Max path is:" + node_modules_dir);
+            
+        } catch(e) {
+            //
+        }
+          
+        var ecoCompiler = require( node_modules_dir  + '/eco/lib/compiler');
         var templatePath = this.config.rootPath + '/' + this.config.indexes[index].resultsTemplate;
         var templateFile = fs.readFileSync(templatePath, { encoding: 'utf8' });
         var templateFunc = ecoCompiler.compile(templateFile);
         resultsTemplate = templateFunc.toString();
+        
       }
       if (resultsTemplate) {
         // very poor-man's minify: just remove line breaks
@@ -325,7 +337,7 @@ module.exports = {
     // next copy the client files
     var clientFiles = {
       'lunr-ui.min.js': __dirname + '/',
-      'lunr.min.js': '/Users/bakrkawkji/www/home/sites/trustly/docpad-trustly.com/node_modules/lunr/'
+      'lunr.min.js': node_modules_dir + '/lunr/'
     };
     var destDir = location + '/';
     for (var filename in clientFiles) {
