@@ -286,6 +286,7 @@ module.exports = {
     for (var index in this.config.indexes) {
       var filename = this.config.indexes[index].indexFilename;
       var file = fs.openSync(location + '/' + filename, 'w+');
+      var file_pritty = fs.openSync(location + '/' + filename + '_pritty', 'w+');
       // start the file with an object for namespacing purposes
       fs.writeSync(file, 'var lunrdoc = lunrdoc || {};');
       // append the json for the search index
@@ -295,6 +296,18 @@ module.exports = {
       // append, if needed, the facet data
       if (typeof this.config.indexes[index].facetFields !== 'undefined') {
         fs.writeSync(file, 'lunrdoc.facets=' + JSON.stringify(this.config.indexes[index].facetFields) + ';');
+      }
+      
+      // generate pretty-print version of the index files
+      // start the file with an object for namespacing purposes
+      fs.writeSync(file_pritty, 'var lunrdoc = lunrdoc || {};');
+      // append the json for the search index
+      fs.writeSync(file_pritty, 'lunrdoc.indexJson=' + JSON.stringify(this.config.indexes[index].idx.toJSON(), null, '\t') + ';');
+      // append the json for the content data
+      fs.writeSync(file_pritty, 'lunrdoc.content=' + JSON.stringify(this.config.indexes[index].content, null, '\t') + ';');
+      // append, if needed, the facet data
+      if (typeof this.config.indexes[index].facetFields !== 'undefined') {
+        fs.writeSync(file_pritty, 'lunrdoc.facets=' + JSON.stringify(this.config.indexes[index].facetFields, null, '\t') + ';');
       }
       // append the client-side templating function for results
       var resultsTemplate = '';
@@ -323,11 +336,14 @@ module.exports = {
         // todo: use an actual minify library or something
         resultsTemplate = resultsTemplate.replace(/(\r\n|\n|\r)/gm," ");
         fs.writeSync(file, 'lunrdoc.template = ' + resultsTemplate + ';');
+        fs.writeSync(file_pritty, 'lunrdoc.template = ' + resultsTemplate + ';');
       }
       // append the "no results" message
       fs.writeSync(file, 'lunrdoc.noResultsMessage="' + this.config.indexes[index].noResultsMessage + '";');
+      fs.writeSync(file_pritty, 'lunrdoc.noResultsMessage="' + this.config.indexes[index].noResultsMessage + '";');
       // finished with that file
       fs.closeSync(file);
+      fs.closeSync(file_pritty);
     }
     // next copy the client files
     var clientFiles = {
