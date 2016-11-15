@@ -31,6 +31,8 @@
 
       LunrPlugin.prototype.writeAfter = function(opts) {
         var index, indexName, _indexDocument, _ref;
+        // Generate the Jekyll index
+        lunrdoc.indexJekyll();
         _indexDocument = function(docpad, collection) {
           var indexCollection;
           indexCollection = docpad.getCollection(collection);
@@ -52,7 +54,6 @@
               _indexDocument(this.docpad, index.collection);
             }
           }
-          return lunrdoc.save();
         }
       };
 
