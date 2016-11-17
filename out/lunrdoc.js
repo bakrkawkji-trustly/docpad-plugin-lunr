@@ -3,8 +3,6 @@ var fs = require('fs');
 var util = require('util');
 var htmlToText = require('html-to-text');
 var cheerio = require('cheerio');
-var readdirp = require('readdirp');
-var he = require('he');
 
 module.exports = {
   /*
@@ -271,53 +269,6 @@ module.exports = {
     }
     // save it, keyed to its cid, for easy retrieval
     this.config.indexes[index].content[model.cid] = itemForContent;
-  },
-  /*
-  * This function scans an external folder 'excludes' that contains HTML files
-  * from other integrations with Docpad and add it's content to the search index,
-  * used to integrate with Jekyll.
-  */
-  indexJekyll: function() {
-    var that = this;
-    // Generate indexes only for the EN site
-    var index = 'enIndex';
-
-    readdirp({ root: './../jekyll-trustly.com/dist/', fileFilter: '*.html' }, function(fileInfo){}, function(err, res){
-      if (err) {
-        console.error(err)
-      }
-
-      for (var i in res.files) {
-        var file = res.files[i]
-        var jekyllItemToIndex = {}
-        var itemForContent = {}
-
-        $ = cheerio.load(fs.readFileSync(file.fullPath));
-        // Decode any HTML unicoded characters in the title
-        var title = he.decode($('title').html());
-        var url = $('meta[property="og:url"]').attr('content');
-        $('a, img, .image-gallery, .nav, .floated-nav, .footer, .cookie-prompt, .contact-us, .events, .upcoming-event-calendar, .by-the-numbers, .job-openings, .blog-posts, script, .page-stats').remove();
-        $('*').removeAttr('href, src, class, id');
-        var clean = htmlToText.fromString($.html(), {});
-        
-        jekyllItemToIndex.cid = 'j' + i;
-        jekyllItemToIndex['content'] = clean;
-        jekyllItemToIndex['title'] = title;
-        jekyllItemToIndex['url'] = url;
-        jekyllItemToIndex.description = '';
-        jekyllItemToIndex.tags = '';
-
-        // Item for content should contain only 'content', 'title', 'url'
-        itemForContent['content'] = clean;
-        itemForContent['title'] = title;
-        itemForContent['url'] = url;
-
-        that.config.indexes[index].idx.add(jekyllItemToIndex);
-        that.config.indexes[index].content[jekyllItemToIndex.cid] = itemForContent;
-      }
-      that.save();
-    })
-
   },
   /*
    * This serializes and writes to disk all data for the your client-side
